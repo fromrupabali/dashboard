@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-export const LogoutButton = styled.button`
+ const LogoutButton = styled.button`
   padding: 9px 0;
   width: 90%;
   font-size: 15px;
@@ -12,7 +12,7 @@ export const LogoutButton = styled.button`
   }
 `;
 
-export const PrimaryButton = styled.button`
+ const PrimaryButton = styled.button`
   width: 100%;
   padding: 9px 0;
   margin: 0 0 10px 0;
@@ -24,11 +24,10 @@ export const PrimaryButton = styled.button`
   background: none;
   &:hover {
     border: 1px solid orangered;
-    background: orangered;
-    color: white;
+    color: orangered;
   }
 `;
-export const ActiveButton = styled.button`
+ const ActiveButton = styled.button`
   width: 100%;
   padding: 9px 0;
   margin: 0 0 10px 0;
@@ -41,3 +40,9 @@ export const ActiveButton = styled.button`
   background: orangered;
   color: white;
 `;
+
+export{
+  LogoutButton,
+  PrimaryButton,
+  ActiveButton
+}

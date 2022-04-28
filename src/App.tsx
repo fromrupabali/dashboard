@@ -1,15 +1,17 @@
 import React, { useState, useEffect} from "react";
 import { Device, DeviceType } from './model';
 import axios from 'axios';
-import { Container, DeviceContainer, DeviceHeaderContainer, DeviceListContaienr, LeftBottomContainer, LeftContainer, LeftTopContainer, RightContainer, TableList, TableRaw,TableHeader, TableData, DataListContainer, LogoContainer, Logo, DeviceTypeContainer, PrimaryTitle, CardsContainer } from "./Components/Styles/Container.styles";
+import { Container, DeviceContainer, DeviceHeaderContainer, DeviceListContainer,LeftBottomContainer, LeftContainer, LeftTopContainer, RightContainer, TableList, TableRaw,TableHeader, LogoContainer, Logo, DeviceTypeContainer, PrimaryTitle, CardsContainer } from "./Components/Styles/Container.styles";
 import LogoSrc from './assets/Logo.png';
-import { LogoutButton, PrimaryButton } from "./Components/Styles/Button.styles";
+import { LogoutButton } from "./Components/Styles/Button.styles";
 import PrimaryCard from "./Components/Cards/PrimaryCard";
-import { Card1, CardTitle, CardValue } from "./Components/Styles/Cards.styles";
 import SingleDeviceType from "./Components/DeviceType/SingleDeviceType";
 import SingleDevice from "./Components/Devices/SingleDevice";
+import Loader from "./Components/Loader";
 
-function App(){
+import { URL, TOKEN } from './Components/Keys';
+
+const App:React.FC =()=>{
     const [deviceList, setDeviceList] = useState<Device[]>([]);
     const [devices, setDevices] = useState<Device[]>([]);
     const [fetchDone, setDone] = useState<boolean>(false);
@@ -26,18 +28,13 @@ function App(){
         try{
           setDone(false);
           setTypeList([]);
-          let webApiUrl = 'https://vstechtest.azurewebsites.net/api/GetData';
-          let tokenStr = 'ade74927-f3df-4718-8f85-d10bab443b1c';
-            const res = await  axios.get(webApiUrl, { headers: {"Authorization" : `Bearer ${tokenStr}`} })
-          // .then(res=>{
-            console.log("Hi", res)
+            const res = await  axios.get(URL, { headers: {"Authorization" : `Bearer ${TOKEN}`} })
+            if(res.status !== 200) return;
             const allDevices = res.data;
              setDevices(allDevices);
              setDeviceList(allDevices);
-             setDone(true);
+           
              allDevices.map((device: { deviceType: string; connectionStatus:string, status: string },index: number)=>{
-               //console.log("Index", index)
-              // if(typeList.length > 0){
                 let newList = typeList;
                 for(let i = 0; i<typeList.length; i++){
                   let updatedType = typeList[i];
@@ -59,40 +56,26 @@ function App(){
                    break;
                   }
                   else if(device.deviceType !== updatedType.name && i === typeList.length - 1){
-    
                     let newType = {
                       name: device.deviceType,
-                      total: 1,
+                      total: 0,
                       online: 0,
                       failed: 0
                    }
-                   if(device.connectionStatus === "Online"){
-                     newType.online = newType.online + 1;
-                     newList[0].online = newList[0].online + 1;
-                   }
-                   if(device.status === "Failed"){
-                     newType.failed = newType.failed + 1;
-                     newList[0].failed = newList[0].failed + 1;
-                   }
-               
                    newList.push(newType);
-                   newList[0].total = newList[0].total + 1;
-                   setTypeList(newList)
                   }
-                 
                 }   
              })
-          // }
-          // )
+             setDone(true);
+         
         }catch(err){
-          setDone(true);
           throw err;
         }
       }
      
       const selectType = (name:string, index:number) =>{
         try{
-          console.log(index)
+          document.getElementById("device-list")?.scrollTo(0,0);
           if(name === "All"){
             setDevices(deviceList);
             setSelectedTypeIndex(0);
@@ -104,7 +87,7 @@ function App(){
                newDevices.push(device);
              }
            });
-          //  console.log("New devices", newDevices)
+          
           setSelectedTypeIndex(index);
            setDevices(newDevices);
         }catch(err){
@@ -113,13 +96,12 @@ function App(){
       }
       
       useEffect(()=>{
-        console.log('i fire once');
         fetchDevices();
       },[]);
     return(
+      fetchDone?
         <Container>
             <LeftContainer>
-         
               <LeftTopContainer>
                      <LogoContainer>
                          <Logo src={LogoSrc}/>
@@ -128,15 +110,12 @@ function App(){
                          <PrimaryTitle>
                              Device Type
                          </PrimaryTitle>
-                         {/* <PrimaryButton>All</PrimaryButton>
-                         <PrimaryButton>BCM</PrimaryButton>
-                         <PrimaryButton>Emered</PrimaryButton>
-                         <PrimaryButton>Networking</PrimaryButton> */}
+                         
                           {
-                                typeList.map((item, index)=>{
-                                return <SingleDeviceType selectedIndex={selectedTypeIndex} index={index} device={item} ClickHandler={selectType}/>
-                                })
-                        }
+                            typeList.map((item, index)=>{
+                                return <SingleDeviceType key={index} selectedIndex={selectedTypeIndex} index={index} device={item} ClickHandler={selectType}/>
+                            })
+                          }
                      </DeviceTypeContainer>
               </LeftTopContainer>
               <LeftBottomContainer>
@@ -148,15 +127,15 @@ function App(){
                     <DeviceHeaderContainer>
                         <PrimaryTitle>{typeList.length > 0 ?typeList[selectedTypeIndex].name:""} Devices</PrimaryTitle>
                         <CardsContainer>
-                        <PrimaryCard value={typeList.length > 0 ?typeList[selectedTypeIndex].total:0} title="Total" color="#FF8B24"/> 
-                        <PrimaryCard value={typeList.length > 0 ?typeList[selectedTypeIndex].online:0} title="Online" color="#54BD68"/> 
-                        <PrimaryCard value={typeList.length > 0 ?typeList[selectedTypeIndex].failed:0} title="Failed" color="#6666FB"/> 
-
+                          <PrimaryCard value={typeList.length > 0 ?typeList[selectedTypeIndex].total:0} title="Total" color="#FF8B24"/> 
+                          <PrimaryCard value={typeList.length > 0 ?typeList[selectedTypeIndex].online:0} title="Online" color="#54BD68"/> 
+                          <PrimaryCard value={typeList.length > 0 ?typeList[selectedTypeIndex].failed:0} title="Failed" color="#6666FB"/> 
                         </CardsContainer>
                     </DeviceHeaderContainer>
-                    <DeviceListContaienr>
+                    <DeviceListContainer id ="device-list">
                         <TableList>
-                            <TableRaw>
+                            <tbody>
+                            <TableRaw >
                                 <TableHeader>
                                     ID
                                 </TableHeader>
@@ -174,25 +153,22 @@ function App(){
                                 </TableHeader>
                             
                             </TableRaw>
-                            {/* <DataListContainer> */}
-                    
                             {
-                             devices.map(device=>{
-                                return <SingleDevice {...device}/>
+                             devices.map((device, index)=>{
+                                return <SingleDevice key={index} {...device}/>
                               })
                             }
-                            
-                            
+                            </tbody>
                            
-                           
-                            {/* </DataListContainer> */}
+                            
                             
                         </TableList>
-                    </DeviceListContaienr>
+                    </DeviceListContainer>
                 </DeviceContainer>
             </RightContainer>
            
-        </Container>
+        </Container>:
+        <Loader />
     )
 
 }
